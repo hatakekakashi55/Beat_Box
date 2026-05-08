@@ -189,65 +189,18 @@ const enc = encodeURIComponent;
 // ═══════════════════════════════════════════════════════════════
 // HTTP ROUTER: JIOSAAVN (Using gotScraping for TLS bypass)
 // ═══════════════════════════════════════════════════════════════
-app.get('/api/(.*)', async (req, res) => {
-  const p = req.path;
-  const q = req.query.q || req.query.query || '';
-  const n = req.query.n || req.query.limit || '20';
-  const id = req.query.id || '';
 
-  let apiUrl, type, forceType;
-
-  if (p === '/api/search') {
-    apiUrl = `${JIOSAAVN}?__call=autocomplete.get&_format=json&_marker=0&cc=in&includeMetaTags=1&query=${enc(q)}`;
-    type = 'auto';
-  } else if (p === '/api/search/songs') {
-    apiUrl = `${JIOSAAVN}?__call=search.getResults&_format=json&_marker=0&cc=in&p=1&q=${enc(q)}&n=${n}`;
-    type = 'list';
-    forceType = 'song';
-  } else if (p === '/api/search/albums') {
-    apiUrl = `${JIOSAAVN}?__call=search.getAlbumResults&_format=json&_marker=0&cc=in&p=1&q=${enc(q)}&n=${n}`;
-    type = 'list';
-    forceType = 'album';
-  } else if (p === '/api/search/artists') {
-    apiUrl = `${JIOSAAVN}?__call=search.getArtistResults&_format=json&_marker=0&cc=in&p=1&q=${enc(q)}&n=${n}`;
-    type = 'list';
-    forceType = 'artist';
-  } else if (p === '/api/search/playlists') {
-    apiUrl = `${JIOSAAVN}?__call=search.getPlaylistResults&_format=json&_marker=0&cc=in&p=1&q=${enc(q)}&n=${n}`;
-    type = 'list';
-    forceType = 'playlist';
-  } else if (p === '/api/albums') {
-    apiUrl = `${JIOSAAVN}?__call=content.getAlbumDetails&_format=json&_marker=0&cc=in&albumid=${enc(id)}`;
-    type = 'detail';
-  } else if (p === '/api/playlists') {
-    apiUrl = `${JIOSAAVN}?__call=playlist.getDetails&_format=json&_marker=0&cc=in&listid=${enc(id)}`;
-    type = 'detail';
-  } else {
-    const sugMatch = p.match(/^\/api\/songs\/([^/]+)\/suggestions$/);
-    const songMatch = p.match(/^\/api\/songs\/([^/]+)$/);
-    if (sugMatch) {
-      apiUrl = `${JIOSAAVN}?__call=reco.getreco&_format=json&_marker=0&cc=in&pid=${enc(sugMatch[1])}&n=${n}`;
-      type = 'sug';
-    } else if (songMatch) {
-      apiUrl = `${JIOSAAVN}?__call=song.getDetails&_format=json&_marker=0&cc=in&pids=${enc(songMatch[1])}`;
-      type = 'song';
-    } else {
-      return res.status(404).json({ error: 'Unknown endpoint' });
-    }
-  }
-
+// Shared fetch + format logic
+async function fetchAndFormat(res, apiUrl, type, forceType) {
   log('JioSaavn', `Fetching ${type}: ${apiUrl.split('__call=')[1].split('&')[0]}`, 'running');
-
   try {
-    // 👑 got-scraping for ultimate stealth (TLS Client JS equivalent)
     const resp = await gotScraping.get({
       url: apiUrl,
       responseType: 'json',
       headers: buildStealthHeaders(),
       timeout: { request: 10000 },
-      http2: true, // Bypass Cloudflare HTTP/1.1 checks
+      http2: true,
     });
-
     const raw = resp.body;
     let out;
     if (type === 'auto') out = fmtAuto(raw);
@@ -255,13 +208,69 @@ app.get('/api/(.*)', async (req, res) => {
     else if (type === 'detail') out = fmtDetail(raw);
     else if (type === 'song') out = fmtSongDetail(raw);
     else out = fmtSuggestions(raw);
-
     log('JioSaavn', `Success: ${type}`, 'success');
     res.json(out);
   } catch (err) {
     log('JioSaavn', `Error: ${err.message}`, 'error');
     res.status(502).json({ error: 'JioSaavn fetch failed', details: err.message });
   }
+}
+
+app.get('/api/search', async (req, res) => {
+  const q = req.query.q || req.query.query || '';
+  const apiUrl = `${JIOSAAVN}?__call=autocomplete.get&_format=json&_marker=0&cc=in&includeMetaTags=1&query=${enc(q)}`;
+  await fetchAndFormat(res, apiUrl, 'auto');
+});
+
+app.get('/api/search/songs', async (req, res) => {
+  const q = req.query.q || req.query.query || '';
+  const n = req.query.n || req.query.limit || '20';
+  const apiUrl = `${JIOSAAVN}?__call=search.getResults&_format=json&_marker=0&cc=in&p=1&q=${enc(q)}&n=${n}`;
+  await fetchAndFormat(res, apiUrl, 'list', 'song');
+});
+
+app.get('/api/search/albums', async (req, res) => {
+  const q = req.query.q || req.query.query || '';
+  const n = req.query.n || req.query.limit || '20';
+  const apiUrl = `${JIOSAAVN}?__call=search.getAlbumResults&_format=json&_marker=0&cc=in&p=1&q=${enc(q)}&n=${n}`;
+  await fetchAndFormat(res, apiUrl, 'list', 'album');
+});
+
+app.get('/api/search/artists', async (req, res) => {
+  const q = req.query.q || req.query.query || '';
+  const n = req.query.n || req.query.limit || '20';
+  const apiUrl = `${JIOSAAVN}?__call=search.getArtistResults&_format=json&_marker=0&cc=in&p=1&q=${enc(q)}&n=${n}`;
+  await fetchAndFormat(res, apiUrl, 'list', 'artist');
+});
+
+app.get('/api/search/playlists', async (req, res) => {
+  const q = req.query.q || req.query.query || '';
+  const n = req.query.n || req.query.limit || '20';
+  const apiUrl = `${JIOSAAVN}?__call=search.getPlaylistResults&_format=json&_marker=0&cc=in&p=1&q=${enc(q)}&n=${n}`;
+  await fetchAndFormat(res, apiUrl, 'list', 'playlist');
+});
+
+app.get('/api/albums', async (req, res) => {
+  const id = req.query.id || '';
+  const apiUrl = `${JIOSAAVN}?__call=content.getAlbumDetails&_format=json&_marker=0&cc=in&albumid=${enc(id)}`;
+  await fetchAndFormat(res, apiUrl, 'detail');
+});
+
+app.get('/api/playlists', async (req, res) => {
+  const id = req.query.id || '';
+  const apiUrl = `${JIOSAAVN}?__call=playlist.getDetails&_format=json&_marker=0&cc=in&listid=${enc(id)}`;
+  await fetchAndFormat(res, apiUrl, 'detail');
+});
+
+app.get('/api/songs/:songId/suggestions', async (req, res) => {
+  const n = req.query.n || req.query.limit || '20';
+  const apiUrl = `${JIOSAAVN}?__call=reco.getreco&_format=json&_marker=0&cc=in&pid=${enc(req.params.songId)}&n=${n}`;
+  await fetchAndFormat(res, apiUrl, 'sug');
+});
+
+app.get('/api/songs/:songId', async (req, res) => {
+  const apiUrl = `${JIOSAAVN}?__call=song.getDetails&_format=json&_marker=0&cc=in&pids=${enc(req.params.songId)}`;
+  await fetchAndFormat(res, apiUrl, 'song');
 });
 
 // ═══════════════════════════════════════════════════════════════
@@ -341,9 +350,9 @@ app.get('/youtube/search', async (req, res) => {
 // ═══════════════════════════════════════════════════════════════
 // TMDB PROXY (Using ofetch for raw speed)
 // ═══════════════════════════════════════════════════════════════
-app.get('/tmdb/(.*)', async (req, res) => {
-  const path = req.path.replace('/tmdb', '');
-  const url = `${TMDB_BASE}${path}?${new URLSearchParams(req.query)}`;
+app.use('/tmdb', async (req, res) => {
+  const tmdbPath = req.path; // already stripped of /tmdb prefix by app.use
+  const url = `${TMDB_BASE}${tmdbPath}?${new URLSearchParams(req.query)}`;
   try {
     const resp = await ofetch(url, { headers: buildStealthHeaders() });
     res.json(resp);
