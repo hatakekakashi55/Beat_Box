@@ -1,0 +1,502 @@
+/* =====================================================
+   Expanded Full-Screen Player — Spotify Style
+   Violet + Sky Blue Liquid Glass
+   ===================================================== */
+
+.exp-player {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  display: flex;
+  flex-direction: column;
+  padding: env(safe-area-inset-top, 16px) var(--space-xl) env(safe-area-inset-bottom, 20px);
+  overflow: hidden;
+  animation: slideUpFull 0.35s cubic-bezier(0.32, 0.72, 0, 1);
+}
+
+@keyframes slideUpFull {
+  from { transform: translateY(100%); }
+  to   { transform: translateY(0); }
+}
+
+/* Blurred album art background */
+.exp-player__bg {
+  position: absolute;
+  inset: 0;
+  background-size: cover;
+  background-position: center;
+  filter: blur(60px) brightness(0.4) saturate(1.4);
+  transform: scale(1.2);
+  z-index: 0;
+}
+
+/* Dark overlay for readability */
+.exp-player__overlay {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    180deg,
+    rgba(16, 0, 26, 0.3) 0%,
+    rgba(16, 0, 26, 0.55) 50%,
+    rgba(16, 0, 26, 0.85) 100%
+  );
+  z-index: 1;
+}
+
+/* All content above background */
+.exp-player > *:not(.exp-player__bg):not(.exp-player__overlay) {
+  position: relative;
+  z-index: 2;
+}
+
+/* ── Header ── */
+.exp-player__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: var(--space-lg);
+  padding-top: var(--space-sm);
+}
+
+.exp-player__down-btn,
+.exp-player__menu-btn {
+  width: 40px;
+  height: 40px;
+  border-radius: var(--radius-full);
+  background: rgba(255, 255, 255, 0.08);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 22px;
+  color: var(--text-primary);
+  transition: all var(--transition-fast);
+}
+
+.exp-player__down-btn:hover,
+.exp-player__menu-btn:hover {
+  background: rgba(255, 255, 255, 0.15);
+}
+
+.exp-player__context {
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 1.5px;
+  color: rgba(255, 255, 255, 0.6);
+}
+
+/* ── Context Menu ── */
+.exp-player__menu {
+  position: absolute;
+  top: 70px;
+  right: var(--space-xl);
+  min-width: 200px;
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  z-index: 10;
+}
+
+.exp-player__menu button {
+  display: flex;
+  align-items: center;
+  gap: var(--space-md);
+  width: 100%;
+  padding: var(--space-md) var(--space-lg);
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--text-primary);
+  text-align: left;
+  transition: background var(--transition-fast);
+}
+
+.exp-player__menu button:hover {
+  background: rgba(255, 255, 255, 0.08);
+}
+
+/* ── Album Art ── */
+.exp-player__art-wrapper {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-lg) 0;
+  min-height: 0;
+}
+
+.exp-player__art {
+  width: min(75vw, 320px);
+  height: min(75vw, 320px);
+  border-radius: 16px;
+  object-fit: cover;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.7), 0 0 0 1px rgba(255, 255, 255, 0.08);
+  transition: transform var(--transition-normal), box-shadow var(--transition-normal);
+}
+
+.exp-player__art.playing {
+  transform: scale(1.03);
+  box-shadow:
+    0 20px 60px rgba(0, 0, 0, 0.7),
+    0 0 30px rgba(0, 210, 255, 0.2),
+    0 0 0 1px rgba(255, 255, 255, 0.08);
+}
+
+/* ── Info Row ── */
+.exp-player__info-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: var(--space-lg);
+}
+
+.exp-player__info { flex: 1; min-width: 0; }
+
+.exp-player__title {
+  font-family: var(--font-display);
+  font-size: 22px;
+  font-weight: 800;
+  color: var(--text-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  margin-bottom: 4px;
+}
+
+.exp-player__artist {
+  font-size: 14px;
+  color: rgba(255, 255, 255, 0.65);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.exp-player__like-btn {
+  font-size: 26px;
+  color: rgba(255, 255, 255, 0.5);
+  transition: all var(--transition-fast);
+  flex-shrink: 0;
+  margin-left: var(--space-md);
+}
+
+.exp-player__like-btn.liked { color: #00d2ff; }
+.exp-player__like-btn:hover { transform: scale(1.15); }
+
+/* ── Progress Bar ── */
+.exp-player__progress-section {
+  margin-bottom: var(--space-lg);
+}
+
+.exp-player__progress-bar {
+  width: 100%;
+  height: 4px;
+  background: rgba(255, 255, 255, 0.12);
+  border-radius: var(--radius-full);
+  cursor: pointer;
+  position: relative;
+  transition: height var(--transition-fast);
+  margin-bottom: var(--space-xs);
+}
+
+.exp-player__progress-bar:hover { height: 6px; }
+
+.exp-player__progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #A91079, #00d2ff);
+  border-radius: var(--radius-full);
+  position: relative;
+  transition: width 0.1s linear;
+  box-shadow: 0 0 10px rgba(0, 210, 255, 0.5);
+}
+
+.exp-player__progress-thumb {
+  position: absolute;
+  right: -8px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: #fff;
+  opacity: 0;
+  transition: opacity var(--transition-fast);
+}
+
+.exp-player__progress-bar:hover .exp-player__progress-thumb { opacity: 1; }
+
+.exp-player__times {
+  display: flex;
+  justify-content: space-between;
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.5);
+  font-variant-numeric: tabular-nums;
+}
+
+/* ── Main Controls ── */
+.exp-player__controls {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: var(--space-xl);
+}
+
+.exp-player__ctrl-btn {
+  font-size: 26px;
+  color: rgba(255, 255, 255, 0.7);
+  transition: all var(--transition-fast);
+  display: flex;
+  align-items: center;
+  position: relative;
+}
+
+.exp-player__ctrl-btn:hover { color: #fff; transform: scale(1.1); }
+.exp-player__ctrl-btn.active { color: #00d2ff; }
+
+.exp-player__ctrl-btn.active::after {
+  content: '';
+  position: absolute;
+  bottom: -6px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 4px;
+  height: 4px;
+  background: #00d2ff;
+  border-radius: 50%;
+  box-shadow: 0 0 6px #00d2ff;
+}
+
+.exp-player__repeat-one {
+  position: absolute;
+  bottom: -2px;
+  right: -4px;
+  font-size: 9px;
+  font-weight: 700;
+}
+
+.exp-player__play-btn {
+  width: 70px;
+  height: 70px;
+  border-radius: 50%;
+  background: #fff;
+  color: #10001a;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 32px;
+  transition: all var(--transition-spring);
+  box-shadow: 0 0 30px rgba(255, 255, 255, 0.3);
+}
+
+.exp-player__play-btn:hover {
+  transform: scale(1.06);
+  box-shadow: 0 0 40px rgba(255, 255, 255, 0.4);
+}
+
+/* ── Bottom Row ── */
+.exp-player__bottom-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-around;
+}
+
+.exp-player__vol-btn,
+.exp-player__queue-btn,
+.exp-player__share-btn {
+  font-size: 22px;
+  color: rgba(255, 255, 255, 0.6);
+  transition: all var(--transition-fast);
+  display: flex;
+  align-items: center;
+  padding: var(--space-sm);
+}
+
+.exp-player__vol-btn:hover,
+.exp-player__queue-btn:hover,
+.exp-player__share-btn:hover {
+  color: #fff;
+  transform: scale(1.1);
+}
+
+/* glass-panel utility used by menu */
+.glass-panel {
+  background: rgba(30, 0, 50, 0.85);
+  backdrop-filter: blur(40px);
+  -webkit-backdrop-filter: blur(40px);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+}
+
+/* ── Header Actions (video toggle + menu) ── */
+.exp-player__header-actions {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+}
+
+/* ── Video Toggle Button ── */
+.exp-player__video-toggle {
+  width: 40px;
+  height: 40px;
+  border-radius: var(--radius-full);
+  background: rgba(255, 255, 255, 0.08);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 20px;
+  color: var(--text-primary);
+  transition: all var(--transition-fast);
+}
+
+.exp-player__video-toggle:hover {
+  background: rgba(255, 255, 255, 0.15);
+}
+
+.exp-player__video-toggle.active {
+  background: rgba(0, 210, 255, 0.2);
+  color: #00d2ff;
+  box-shadow: 0 0 12px rgba(0, 210, 255, 0.3);
+}
+
+/* ── YouTube Video Container ── */
+.exp-player__video-container {
+  width: min(85vw, 360px);
+  aspect-ratio: 16 / 9;
+  border-radius: 16px;
+  overflow: hidden;
+  position: relative;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.7), 0 0 0 1px rgba(255, 255, 255, 0.08);
+  animation: fadeInScale 0.3s ease-out;
+}
+
+@keyframes fadeInScale {
+  from { opacity: 0; transform: scale(0.95); }
+  to   { opacity: 1; transform: scale(1); }
+}
+
+.exp-player__video-iframe {
+  width: 100%;
+  height: 100%;
+  border: none;
+  border-radius: 16px;
+}
+
+.exp-player__video-label {
+  position: absolute;
+  bottom: 8px;
+  left: 8px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  background: rgba(0, 0, 0, 0.65);
+  backdrop-filter: blur(10px);
+  padding: 4px 10px;
+  border-radius: 20px;
+  font-size: 11px;
+  font-weight: 600;
+  color: #00d2ff;
+  letter-spacing: 0.5px;
+}
+
+/* ── Video Available Badge (on album art) ── */
+.exp-player__video-badge {
+  position: absolute;
+  bottom: 12px;
+  right: 12px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(20px);
+  padding: 6px 14px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 600;
+  color: #00d2ff;
+  border: 1px solid rgba(0, 210, 255, 0.3);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  animation: fadeInScale 0.5s ease-out 0.5s both;
+}
+
+.exp-player__video-badge:hover {
+  background: rgba(0, 210, 255, 0.15);
+  transform: scale(1.05);
+  box-shadow: 0 0 16px rgba(0, 210, 255, 0.3);
+}
+
+/* ── Video Loading Indicator ── */
+.exp-player__video-loading {
+  position: absolute;
+  bottom: 12px;
+  right: 12px;
+}
+
+.exp-player__video-loading-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: rgba(0, 210, 255, 0.5);
+  animation: videoPulse 1.2s ease-in-out infinite;
+}
+
+@keyframes videoPulse {
+  0%, 100% { opacity: 0.3; transform: scale(1); }
+  50% { opacity: 1; transform: scale(1.3); }
+}
+
+/* ── Clips Trigger Button (Spotify Reels) ── */
+.exp-player__info-actions {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.exp-player__clips-trigger {
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  border-radius: 8px;
+  overflow: hidden;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  position: relative;
+  outline: 2px solid transparent;
+}
+
+.exp-player__clips-trigger:hover {
+  transform: scale(1.05);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+  outline: 2px solid rgba(255, 255, 255, 0.5);
+}
+
+.clips-trigger-inner {
+  width: 32px;
+  height: 42px;
+  position: relative;
+  border-radius: 6px;
+  overflow: hidden;
+  background: #000;
+}
+
+.clips-trigger-inner img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  opacity: 0.6;
+}
+
+.clips-trigger-icon {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.5);
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  backdrop-filter: blur(4px);
+}
+
+

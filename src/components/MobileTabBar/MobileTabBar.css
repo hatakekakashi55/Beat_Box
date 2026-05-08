@@ -1,0 +1,66 @@
+.mobile-tab-bar {
+  display: none;
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: var(--tab-bar-height);
+  background: rgba(16, 0, 26, 0.85);
+  backdrop-filter: blur(40px);
+  -webkit-backdrop-filter: blur(40px);
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  z-index: 40;
+  padding: 0 var(--space-sm);
+  padding-bottom: env(safe-area-inset-bottom);
+}
+
+.mobile-tab-bar__inner {
+  display: flex;
+  align-items: center;
+  justify-content: space-around;
+  height: 100%;
+}
+
+.mobile-tab-bar__item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+  padding: var(--space-xs) var(--space-md);
+  color: rgba(255, 255, 255, 0.5);
+  font-size: 10px;
+  font-weight: 500;
+  transition: all var(--transition-fast);
+  min-width: 48px;
+  border-radius: var(--radius-md);
+}
+
+.mobile-tab-bar__item.active {
+  color: #fff;
+}
+
+.mobile-tab-bar__item.active .mobile-tab-bar__icon {
+  color: #00d2ff;
+  filter: drop-shadow(0 0 6px rgba(0, 210, 255, 0.7));
+}
+
+.mobile-tab-bar__item:hover {
+  color: rgba(255, 255, 255, 0.8);
+}
+
+.mobile-tab-bar__icon {
+  font-size: 22px;
+  transition: all var(--transition-fast);
+}
+
+.mobile-tab-bar__divider {
+  width: 1px;
+  height: 28px;
+  background: rgba(255, 255, 255, 0.08);
+}
+
+@media (max-width: 768px) {
+  .mobile-tab-bar {
+    display: block;
+  }
+}

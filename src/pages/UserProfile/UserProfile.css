@@ -1,0 +1,212 @@
+.user-profile-page {
+  padding-bottom: 100px;
+  background: var(--bg-main);
+  min-height: 100vh;
+}
+
+.user-profile-top-nav {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 16px;
+  position: sticky;
+  top: 0;
+  background: var(--bg-main);
+  z-index: 10;
+  border-bottom: 1px solid rgba(255,255,255,0.05);
+}
+
+.nav-username {
+  font-weight: 700;
+  font-size: 1.1rem;
+  color: #fff;
+}
+
+.icon-btn {
+  background: transparent;
+  border: none;
+  color: #fff;
+  font-size: 24px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.user-profile-header-main {
+  padding: 24px 16px 12px;
+  display: flex;
+  align-items: center;
+  gap: 32px;
+}
+
+.avatar-wrapper {
+  position: relative;
+}
+
+.main-avatar {
+  width: 86px;
+  height: 86px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 2px solid var(--accent-primary);
+  padding: 3px;
+}
+
+.change-avatar-btn {
+  position: absolute;
+  bottom: 0;
+  right: 0;
+  background: var(--accent-primary);
+  color: #fff;
+  border: none;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 16px;
+  border: 2px solid var(--bg-main);
+}
+
+.stats-row {
+  flex: 1;
+  display: flex;
+  justify-content: space-around;
+  text-align: center;
+}
+
+.stat-item {
+  display: flex;
+  flex-direction: column;
+}
+
+.stat-item .count {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: #fff;
+}
+
+.stat-item .label {
+  font-size: 0.85rem;
+  color: rgba(255,255,255,0.6);
+}
+
+.user-bio-section {
+  padding: 0 16px 20px;
+}
+
+.full-name {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: #fff;
+  margin: 0 0 2px 0;
+}
+
+.bio {
+  font-size: 0.9rem;
+  color: #fff;
+  margin: 0 0 2px 0;
+}
+
+.email-small {
+  font-size: 0.85rem;
+  color: rgba(255,255,255,0.5);
+  margin: 0;
+}
+
+.profile-actions-insta {
+  padding: 0 16px 24px;
+  display: flex;
+  gap: 8px;
+}
+
+.profile-actions-insta button {
+  flex: 1;
+  padding: 8px;
+  border-radius: 8px;
+  font-weight: 600;
+  font-size: 0.9rem;
+  cursor: pointer;
+  border: none;
+}
+
+.edit-profile-btn, .share-profile-btn, .msg-btn-insta {
+  background: rgba(255,255,255,0.1);
+  color: #fff;
+}
+
+.follow-btn-insta {
+  background: var(--accent-primary);
+  color: #fff;
+}
+
+.follow-btn-insta.following {
+  background: rgba(255,255,255,0.1);
+}
+
+.profile-tabs {
+  display: flex;
+  border-top: 1px solid rgba(255,255,255,0.05);
+}
+
+.tab {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 12px;
+  font-size: 24px;
+  color: rgba(255,255,255,0.4);
+  cursor: pointer;
+}
+
+.tab.active {
+  color: #fff;
+  border-bottom: 2px solid #fff;
+}
+
+.songs-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 2px;
+  padding: 2px;
+}
+
+.grid-item {
+  aspect-ratio: 1 / 1;
+  position: relative;
+  overflow: hidden;
+  cursor: pointer;
+}
+
+.grid-item img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.grid-overlay {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  color: #fff;
+  filter: drop-shadow(0 2px 4px rgba(0,0,0,0.5));
+}
+
+.empty-grid {
+  grid-column: span 3;
+  padding: 60px 0;
+  text-align: center;
+  color: rgba(255,255,255,0.3);
+}
+
+.user-profile-error {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+  font-size: 1.2rem;
+  color: var(--text-subdued);
+}

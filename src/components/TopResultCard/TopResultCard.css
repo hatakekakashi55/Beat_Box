@@ -1,0 +1,133 @@
+/* ===== Top Result Card — Spotify Style ===== */
+.top-result-card {
+  position: relative;
+  background: var(--bg-card);
+  border-radius: var(--radius-lg);
+  padding: var(--space-xl);
+  cursor: pointer;
+  transition: background var(--transition-normal);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+  min-height: 260px;
+}
+
+.top-result-card:hover {
+  background: var(--bg-card-hover);
+}
+
+.top-result-card__image-wrapper {
+  margin-bottom: var(--space-md);
+}
+
+.top-result-card__image {
+  width: 92px;
+  height: 92px;
+  border-radius: var(--radius-md);
+  object-fit: cover;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
+  transition: transform var(--transition-normal);
+}
+
+.top-result-card:hover .top-result-card__image {
+  transform: scale(1.03);
+}
+
+.top-result-card__image--round {
+  border-radius: 50%;
+}
+
+.top-result-card__title {
+  font-family: var(--font-display);
+  font-size: 28px;
+  font-weight: 800;
+  color: var(--text-primary);
+  line-height: 1.15;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.top-result-card__description {
+  font-size: 13px;
+  color: var(--text-subdued);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.top-result-card__badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 14px;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: var(--radius-full);
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--text-primary);
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+  width: fit-content;
+  margin-top: auto;
+}
+
+.top-result-card__play {
+  position: absolute;
+  bottom: var(--space-xl);
+  right: var(--space-xl);
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background: #1ed760;
+  color: #000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 22px;
+  opacity: 0;
+  transform: translateY(8px);
+  transition: all var(--transition-normal);
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.3);
+  border: none;
+  cursor: pointer;
+}
+
+.top-result-card:hover .top-result-card__play {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.top-result-card__play:hover {
+  transform: scale(1.06) !important;
+  background: #1fdf64;
+}
+
+/* Mobile */
+@media (max-width: 768px) {
+  .top-result-card {
+    padding: var(--space-lg);
+    min-height: 220px;
+  }
+
+  .top-result-card__image {
+    width: 80px;
+    height: 80px;
+  }
+
+  .top-result-card__title {
+    font-size: 22px;
+  }
+
+  .top-result-card__play {
+    width: 44px;
+    height: 44px;
+    font-size: 20px;
+    opacity: 1;
+    transform: translateY(0);
+    bottom: var(--space-lg);
+    right: var(--space-lg);
+  }
+}

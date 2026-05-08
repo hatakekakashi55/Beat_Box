@@ -1,0 +1,369 @@
+/* =====================================================
+   Home Page — Spotify Mirror + Liquid Glass (Violet+Sky Blue)
+   ===================================================== */
+
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700;800;900&family=Inter:wght@400;500;600&display=swap');
+
+.home {
+  padding: 0 var(--space-lg) calc(var(--tab-bar-height) + 120px);
+  animation: fadeIn 0.4s ease;
+}
+
+/* ── Greeting ── */
+.home__greeting {
+  font-family: var(--font-display);
+  font-size: 28px;
+  font-weight: 800;
+  margin-bottom: var(--space-lg);
+  padding: var(--space-md) 0 0;
+  background: linear-gradient(135deg, #fff 40%, rgba(0, 210, 255, 0.8));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* ── Quick Picks (Jump Back In) ── */
+.home__quick-picks {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: var(--space-sm);
+  margin-bottom: var(--space-lg);
+}
+
+.home__quick-pick {
+  display: flex;
+  align-items: center;
+  background: rgba(255, 255, 255, 0.07);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  height: 56px;
+  text-align: left;
+}
+
+.home__quick-pick:hover {
+  background: rgba(0, 210, 255, 0.12);
+  border-color: rgba(0, 210, 255, 0.25);
+  box-shadow: 0 4px 20px rgba(0, 210, 255, 0.15);
+  transform: translateY(-1px);
+}
+
+.home__quick-pick-image {
+  width: 56px;
+  height: 56px;
+  object-fit: cover;
+  flex-shrink: 0;
+}
+
+.home__quick-pick-name {
+  font-size: 12px;
+  font-weight: 600;
+  padding: 0 var(--space-md);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  color: var(--text-primary);
+}
+
+/* ── Hero Banner ── */
+.home__hero {
+  position: relative;
+  border-radius: 24px;
+  padding: var(--space-2xl) var(--space-xl);
+  margin-bottom: var(--space-xl);
+  background: rgba(255, 255, 255, 0.04);
+  backdrop-filter: blur(30px);
+  -webkit-backdrop-filter: blur(30px);
+  overflow: hidden;
+  min-height: 200px;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37);
+}
+
+/* Animated liquid orbs inside hero */
+.home__hero-orb {
+  position: absolute;
+  border-radius: 50%;
+  pointer-events: none;
+}
+
+.home__hero-orb--1 {
+  width: 300px;
+  height: 300px;
+  background: radial-gradient(circle, rgba(169, 16, 121, 0.5) 0%, transparent 70%);
+  top: -80px;
+  right: -60px;
+  animation: float 8s ease-in-out infinite;
+}
+
+.home__hero-orb--2 {
+  width: 200px;
+  height: 200px;
+  background: radial-gradient(circle, rgba(0, 210, 255, 0.4) 0%, transparent 70%);
+  bottom: -40px;
+  left: -40px;
+  animation: float 10s ease-in-out infinite reverse;
+}
+
+.home__hero-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-xs);
+  padding: 4px var(--space-sm);
+  background: rgba(0, 210, 255, 0.15);
+  border: 1px solid rgba(0, 210, 255, 0.3);
+  border-radius: var(--radius-full);
+  font-size: 10px;
+  font-weight: 700;
+  color: #00d2ff;
+  text-transform: uppercase;
+  letter-spacing: 1.2px;
+  margin-bottom: var(--space-md);
+  width: fit-content;
+  position: relative;
+  z-index: 1;
+}
+
+.home__hero-title {
+  font-family: var(--font-display);
+  font-size: 36px;
+  font-weight: 900;
+  line-height: 1.1;
+  letter-spacing: -1px;
+  margin-bottom: var(--space-sm);
+  position: relative;
+  z-index: 1;
+}
+
+.home__hero-title span {
+  background: linear-gradient(135deg, #A91079, #00d2ff);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.home__hero-subtitle {
+  font-size: 13px;
+  color: rgba(255, 255, 255, 0.65);
+  line-height: 1.5;
+  position: relative;
+  z-index: 1;
+  max-width: 320px;
+}
+
+/* ── Section & Horizontal Scroll Grid ── */
+.home__section {
+  margin-bottom: var(--space-xl);
+}
+
+/* Personalised sections get a subtle left border glow ("Made For You" style) */
+.home__section--personalised {
+  position: relative;
+  padding-left: 12px;
+  border-left: 3px solid;
+  border-image: linear-gradient(180deg, #A91079 0%, #00d2ff 100%) 1;
+  margin-left: -12px;
+}
+
+/* Spotify-style horizontal scrollable row */
+.home__grid {
+  display: flex;
+  overflow-x: auto;
+  overflow-y: hidden;
+  gap: var(--space-md);
+  padding: var(--space-xs) 2px var(--space-md);
+  scroll-snap-type: x mandatory;
+  -webkit-overflow-scrolling: touch;
+  /* Hide scrollbar */
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.home__grid::-webkit-scrollbar {
+  display: none;
+}
+
+/* Song cards — fixed 148px width */
+.home__grid > * {
+  scroll-snap-align: start;
+  flex: 0 0 auto;
+  width: 148px;
+}
+
+/* Album cards are slightly wider (they show artist + year under) */
+.home__grid .album-card {
+  width: 160px;
+}
+
+/* ── Section Header ── */
+.section-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: var(--space-md);
+}
+
+/* ── Spotify Curated Playlists Grid ── */
+.home__playlist-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  gap: 24px;
+  padding-bottom: var(--space-md);
+}
+
+.spotify-card {
+  background: #181818;
+  padding: 16px;
+  border-radius: 8px;
+  transition: background-color 0.3s ease;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+}
+
+.spotify-card:hover {
+  background: #282828;
+}
+
+.spotify-card__img-container {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 1;
+  margin-bottom: 16px;
+  border-radius: 4px;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.5);
+  overflow: hidden;
+  background: #282828;
+}
+
+.spotify-card__img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.spotify-card__placeholder {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 48px;
+  color: #a7a7a7;
+}
+
+.spotify-card__play {
+  position: absolute;
+  bottom: 8px;
+  right: 8px;
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background: #1ed760;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #000;
+  opacity: 0;
+  transform: translateY(8px);
+  transition: all 0.3s ease;
+  box-shadow: 0 8px 8px rgba(0,0,0,0.3);
+  z-index: 2;
+}
+
+.spotify-card:hover .spotify-card__play {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.spotify-card__play:hover {
+  transform: scale(1.05) !important;
+  background: #1fdf64;
+}
+
+.spotify-card__title {
+  font-size: 16px;
+  font-weight: 700;
+  color: #fff;
+  margin-bottom: 8px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.spotify-card__desc {
+  font-size: 14px;
+  color: #a7a7a7;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  line-height: 1.4;
+}
+
+/* ── Mobile ── */
+@media (max-width: 768px) {
+  .home {
+    padding: 0 var(--space-md) 200px;
+  }
+
+  .home__greeting {
+    font-size: 22px;
+    padding-top: var(--space-sm);
+  }
+
+  .home__hero {
+    padding: var(--space-xl) var(--space-md);
+    min-height: 160px;
+  }
+
+  .home__hero-title {
+    font-size: 26px;
+  }
+
+  .home__hero-subtitle {
+    font-size: 12px;
+  }
+
+  .home__quick-picks {
+    grid-template-columns: repeat(2, 1fr);
+    gap: var(--space-xs);
+  }
+
+  .home__grid > * {
+    width: 128px;
+  }
+
+  .home__grid .album-card {
+    width: 140px;
+  }
+  
+  .home__playlist-grid {
+    grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+    gap: 16px;
+  }
+}
+
+@media (max-width: 380px) {
+  .home__quick-picks {
+    grid-template-columns: 1fr;
+  }
+  .home__grid > * {
+    width: 116px;
+  }
+  .home__grid .album-card {
+    width: 128px;
+  }
+  .home__playlist-grid {
+    grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+    gap: 12px;
+  }
+}

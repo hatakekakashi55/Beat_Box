@@ -1,0 +1,102 @@
+/* ===== Artist Card — Spotify Style (Circular) ===== */
+.artist-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-sm);
+  padding: var(--space-md);
+  border-radius: var(--radius-lg);
+  background: transparent;
+  cursor: pointer;
+  transition: background var(--transition-normal);
+  text-align: center;
+  min-width: 0;
+}
+
+.artist-card:hover {
+  background: var(--bg-card-hover);
+}
+
+.artist-card__image-wrapper {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 1;
+  border-radius: 50%;
+  overflow: hidden;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
+}
+
+.artist-card__image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform var(--transition-normal);
+}
+
+.artist-card:hover .artist-card__image {
+  transform: scale(1.04);
+}
+
+.artist-card__play {
+  position: absolute;
+  bottom: 8px;
+  right: 8px;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: #1ed760;
+  color: #000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+  opacity: 0;
+  transform: translateY(8px);
+  transition: all var(--transition-normal);
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.3);
+  border: none;
+  cursor: pointer;
+}
+
+.artist-card:hover .artist-card__play {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.artist-card__play:hover {
+  transform: scale(1.06) !important;
+  background: #1fdf64;
+}
+
+.artist-card__name {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--text-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
+}
+
+.artist-card__label {
+  font-size: 12px;
+  color: var(--text-subdued);
+  text-transform: capitalize;
+}
+
+/* Mobile */
+@media (max-width: 768px) {
+  .artist-card {
+    padding: var(--space-sm);
+  }
+
+  .artist-card__play {
+    width: 38px;
+    height: 38px;
+    font-size: 16px;
+  }
+
+  .artist-card__name {
+    font-size: 13px;
+  }
+}

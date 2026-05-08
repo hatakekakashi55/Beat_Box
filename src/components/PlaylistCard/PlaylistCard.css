@@ -1,0 +1,104 @@
+/* ===== Playlist Card — Spotify Style ===== */
+.playlist-card {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+  padding: var(--space-md);
+  border-radius: var(--radius-lg);
+  background: transparent;
+  cursor: pointer;
+  transition: background var(--transition-normal);
+  min-width: 0;
+}
+
+.playlist-card:hover {
+  background: var(--bg-card-hover);
+}
+
+.playlist-card__image-wrapper {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 1;
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
+}
+
+.playlist-card__image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform var(--transition-normal);
+}
+
+.playlist-card:hover .playlist-card__image {
+  transform: scale(1.03);
+}
+
+.playlist-card__play {
+  position: absolute;
+  bottom: 8px;
+  right: 8px;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: #1ed760;
+  color: #000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+  opacity: 0;
+  transform: translateY(8px);
+  transition: all var(--transition-normal);
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.3);
+  border: none;
+  cursor: pointer;
+}
+
+.playlist-card:hover .playlist-card__play {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.playlist-card__play:hover {
+  transform: scale(1.06) !important;
+  background: #1fdf64;
+}
+
+.playlist-card__title {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--text-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.playlist-card__desc {
+  font-size: 12px;
+  color: var(--text-subdued);
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  line-height: 1.4;
+}
+
+/* Mobile */
+@media (max-width: 768px) {
+  .playlist-card {
+    padding: var(--space-sm);
+  }
+
+  .playlist-card__play {
+    width: 38px;
+    height: 38px;
+    font-size: 16px;
+  }
+
+  .playlist-card__title {
+    font-size: 13px;
+  }
+}

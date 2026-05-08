@@ -1,0 +1,306 @@
+/* =====================================================
+   Search Page — Spotify Premium Style
+   ===================================================== */
+
+.search-page {
+  padding: 0 var(--space-xl) calc(var(--tab-bar-height) + 120px);
+  animation: fadeIn 0.4s ease;
+}
+
+/* ── Search Bar ── */
+.search-page__bar {
+  padding: var(--space-md) 0 var(--space-lg);
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+
+/* ── Browse Title ── */
+.search-page__browse-title {
+  font-family: var(--font-display);
+  font-size: 24px;
+  font-weight: 700;
+  margin-bottom: var(--space-lg);
+  color: var(--text-primary);
+}
+
+/* ── Genre Grid ── */
+.search-page__genres {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(170px, 1fr));
+  gap: var(--space-md);
+  margin-bottom: var(--space-2xl);
+}
+
+.search-page__genre-card {
+  position: relative;
+  padding: var(--space-lg) var(--space-md);
+  border-radius: var(--radius-lg);
+  min-height: 100px;
+  cursor: pointer;
+  overflow: hidden;
+  transition: all var(--transition-normal);
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+.search-page__genre-card:hover {
+  transform: scale(1.03);
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.4);
+}
+
+.search-page__genre-card:active {
+  transform: scale(0.98);
+}
+
+.search-page__genre-emoji {
+  font-size: 28px;
+  margin-bottom: var(--space-xs);
+}
+
+.search-page__genre-name {
+  font-family: var(--font-display);
+  font-size: 16px;
+  font-weight: 700;
+  position: relative;
+  z-index: 1;
+  color: #fff;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+}
+
+/* ── Results Container ── */
+.search-page__results {
+  margin-top: var(--space-xs);
+}
+
+/* ── Top Section (Top Result + Songs side by side) ── */
+.search-page__top-section {
+  display: grid;
+  grid-template-columns: 380px 1fr;
+  gap: var(--space-xl);
+  margin-bottom: var(--space-2xl);
+  animation: fadeIn 0.4s ease;
+}
+
+.search-page__top-result-col {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+}
+
+.search-page__songs-col {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+  min-width: 0;
+}
+
+/* ── Song List (vertical) ── */
+.search-page__song-list {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+/* ── Section Wrapper ── */
+.search-page__section {
+  margin-bottom: var(--space-xl);
+  animation: fadeIn 0.3s ease;
+}
+
+/* ── Horizontal Scroll Row (for Artists, Albums, Playlists in All tab) ── */
+.search-page__horizontal-scroll {
+  display: flex;
+  overflow-x: auto;
+  overflow-y: hidden;
+  gap: var(--space-sm);
+  padding: var(--space-xs) 2px var(--space-md);
+  scroll-snap-type: x mandatory;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.search-page__horizontal-scroll::-webkit-scrollbar {
+  display: none;
+}
+
+.search-page__horizontal-scroll > * {
+  scroll-snap-align: start;
+  flex: 0 0 auto;
+  width: 160px;
+}
+
+/* ── Card Grid (for individual tabs: Artists, Albums, Playlists) ── */
+.search-page__card-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(170px, 1fr));
+  gap: var(--space-sm);
+}
+
+.search-page__card-grid--artists {
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+}
+
+/* ── No Results ── */
+.search-page__no-results {
+  justify-content: center;
+  align-items: center;
+  gap: 16px;
+  color: var(--text-subdued);
+  min-height: 200px;
+}
+
+.search-page__no-results-icon {
+  font-size: 48px;
+  opacity: 0.5;
+}
+
+.search-page__no-results-text {
+  font-size: 1.2rem;
+  font-weight: 600;
+  color: var(--text-main);
+}
+
+.search-page__no-results-hint {
+  font-size: 14px;
+  color: var(--text-subdued);
+}
+
+/* ══════════════════════════════════════════
+   Mobile Responsive
+   ══════════════════════════════════════════ */
+@media (max-width: 900px) {
+  .search-page__top-section {
+    grid-template-columns: 1fr;
+    gap: var(--space-lg);
+  }
+}
+
+@media (max-width: 768px) {
+  .search-page {
+    padding: 0 var(--space-md) 200px;
+  }
+
+  .search-page__browse-title {
+    font-size: 20px;
+  }
+
+  .search-page__genres {
+    grid-template-columns: repeat(2, 1fr);
+    gap: var(--space-sm);
+  }
+
+  .search-page__genre-card {
+    min-height: 88px;
+    padding: var(--space-md);
+  }
+
+  .search-page__genre-emoji {
+    font-size: 22px;
+  }
+
+  .search-page__genre-name {
+    font-size: 14px;
+  }
+
+  .search-page__top-section {
+    grid-template-columns: 1fr;
+    gap: var(--space-md);
+  }
+
+  .search-page__horizontal-scroll > * {
+    width: 140px;
+  }
+
+  .search-page__card-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .search-page__card-grid--artists {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+@media (max-width: 400px) {
+  .search-page__genres {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .search-page__card-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .search-page__card-grid--artists {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .search-page__horizontal-scroll > * {
+    width: 128px;
+  }
+}
+/* -- USERS TAB -- */
+.search-page__card-grid--users {
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+}
+
+.search-user-card {
+  background: var(--bg-surface);
+  border-radius: var(--radius-lg);
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 12px;
+  cursor: pointer;
+  transition: all 0.2s;
+  border: 1px solid transparent;
+}
+
+.search-user-card:hover {
+  background: var(--bg-elevated);
+  transform: translateY(-4px);
+  border-color: rgba(255, 255, 255, 0.1);
+  box-shadow: 0 8px 16px rgba(0,0,0,0.4);
+}
+
+.search-user-card img {
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  object-fit: cover;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.5);
+  border: 2px solid var(--accent-primary);
+}
+
+.search-user-info h4 {
+  margin: 0 0 4px 0;
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: var(--text-main);
+}
+
+.search-user-info p {
+  margin: 0;
+  font-size: 0.85rem;
+  color: var(--text-subdued);
+}
+
+.search-user-follow {
+  background: transparent;
+  border: 1px solid var(--accent-primary);
+  color: var(--accent-primary);
+  padding: 6px 16px;
+  border-radius: 16px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.search-user-card:hover .search-user-follow {
+  background: var(--accent-primary);
+  color: #000;
+}

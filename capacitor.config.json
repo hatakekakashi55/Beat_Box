@@ -1,0 +1,6 @@
+{
+  "appId": "com.inixa.beatbox",
+  "appName": "BeatBox",
+  "webDir": "dist",
+  "bundledWebRuntime": false
+}

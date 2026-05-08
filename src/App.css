@@ -1,0 +1,55 @@
+.app {
+  display: flex;
+  height: 100vh;
+  width: 100vw;
+  overflow: hidden;
+  background: var(--bg-base);
+}
+
+.app__main-wrapper {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  position: relative;
+}
+
+.app__content-area {
+  flex: 1;
+  display: flex;
+  overflow: hidden;
+  position: relative;
+}
+
+.app__main-content {
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+  scroll-behavior: smooth;
+  overscroll-behavior-y: none;
+}
+
+/* Ambient glow */
+.app__ambient {
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 360px;
+  opacity: 0.2;
+  pointer-events: none;
+  transition: background var(--transition-slow);
+  z-index: 0;
+  filter: blur(100px);
+}
+
+.app__main-content > *:not(.app__ambient) {
+  position: relative;
+  z-index: 1;
+}
+
+/* Mobile adjustments */
+@media (max-width: 768px) {
+  .app__main-content {
+    /* Large padding to clear BOTH the tab bar and the floating pill player */
+    padding-bottom: calc(var(--tab-bar-height) + 120px);
+  }
+}

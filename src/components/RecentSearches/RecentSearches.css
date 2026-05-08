@@ -1,0 +1,116 @@
+/* ===== Recent Searches — Spotify Style ===== */
+.recent-searches {
+  margin-bottom: var(--space-xl);
+  animation: fadeIn 0.3s ease;
+}
+
+.recent-searches__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: var(--space-md);
+}
+
+.recent-searches__title {
+  font-family: var(--font-display);
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.recent-searches__clear-all {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 14px;
+  border-radius: var(--radius-full);
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-subdued);
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.recent-searches__clear-all:hover {
+  color: var(--text-primary);
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.recent-searches__list {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.recent-searches__item {
+  display: flex;
+  align-items: center;
+  border-radius: var(--radius-md);
+  transition: background var(--transition-fast);
+}
+
+.recent-searches__item:hover {
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.recent-searches__chip {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: var(--space-md);
+  padding: 12px var(--space-md);
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: var(--text-primary);
+  font-size: 14px;
+  text-align: left;
+}
+
+.recent-searches__icon {
+  font-size: 20px;
+  color: var(--text-subdued);
+  flex-shrink: 0;
+}
+
+.recent-searches__text {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.recent-searches__remove {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  font-size: 16px;
+  color: var(--text-subdued);
+  background: none;
+  border: none;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  flex-shrink: 0;
+  margin-right: var(--space-sm);
+}
+
+.recent-searches__remove:hover {
+  color: var(--text-primary);
+  background: rgba(255, 255, 255, 0.1);
+}
+
+/* Mobile */
+@media (max-width: 768px) {
+  .recent-searches__title {
+    font-size: 18px;
+  }
+
+  .recent-searches__chip {
+    padding: 10px var(--space-md);
+    font-size: 13px;
+  }
+}

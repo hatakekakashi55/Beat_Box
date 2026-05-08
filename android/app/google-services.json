@@ -1,0 +1,39 @@
+{
+  "project_info": {
+    "project_number": "604791915141",
+    "project_id": "beatbox-7c447",
+    "storage_bucket": "beatbox-7c447.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:604791915141:android:052439456cec71d0d31fec",
+        "android_client_info": {
+          "package_name": "com.inixa.beatbox"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "604791915141-7402lf1ujaap128gnc0p5pgaguhs5363.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDrQ3j1OD31Nln1UU0VmYZGDTlaIVBet9s"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "604791915141-7402lf1ujaap128gnc0p5pgaguhs5363.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
