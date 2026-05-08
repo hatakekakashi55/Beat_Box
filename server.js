@@ -189,7 +189,7 @@ const enc = encodeURIComponent;
 // ═══════════════════════════════════════════════════════════════
 // HTTP ROUTER: JIOSAAVN (Using gotScraping for TLS bypass)
 // ═══════════════════════════════════════════════════════════════
-app.get('/api/:path*', async (req, res) => {
+app.get('/api/(.*)', async (req, res) => {
   const p = req.path;
   const q = req.query.q || req.query.query || '';
   const n = req.query.n || req.query.limit || '20';
@@ -341,7 +341,7 @@ app.get('/youtube/search', async (req, res) => {
 // ═══════════════════════════════════════════════════════════════
 // TMDB PROXY (Using ofetch for raw speed)
 // ═══════════════════════════════════════════════════════════════
-app.get('/tmdb/:path*', async (req, res) => {
+app.get('/tmdb/(.*)', async (req, res) => {
   const path = req.path.replace('/tmdb', '');
   const url = `${TMDB_BASE}${path}?${new URLSearchParams(req.query)}`;
   try {
