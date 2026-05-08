@@ -14,8 +14,8 @@
 //  CONFIGURATION
 // ══════════════════════════════════════════════════════════════
 
-// Your Cloudflare Worker URL (deploy cloudflare-worker.js to it)
-const WORKER_URL = 'https://misty-math-6546.hillsmaster999.workers.dev';
+// Your Render backend URL (server.js hosted on Render)
+const WORKER_URL = 'https://beat-box-h85k.onrender.com';
 const API_VERSION = '2.1.2'; // Force rebuild hash
 
 // Detect if we're in dev mode (Vite dev server with proxy)
