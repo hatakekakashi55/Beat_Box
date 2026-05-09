@@ -1,0 +1,12 @@
+name: Keep Render Backend Awake
+on:
+  schedule:
+    - cron: '*/5 * * * *' # Runs every 5 minutes
+  workflow_dispatch: # Allows manual trigger
+
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Ping Render App
+        run: curl -sSf https://beat-box-h85k.onrender.com/ > /dev/null || echo "Ping failed but continuing"

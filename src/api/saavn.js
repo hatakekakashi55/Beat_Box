@@ -21,7 +21,10 @@ const API_VERSION = '2.1.2'; // Force rebuild hash
 // Detect if we're in dev mode (Vite dev server with proxy)
 const isDev = typeof window !== 'undefined' && (
   window.location.hostname === 'localhost' ||
-  window.location.hostname === '127.0.0.1'
+  window.location.hostname === '127.0.0.1' ||
+  window.location.hostname.startsWith('192.168.') ||
+  window.location.hostname.startsWith('10.') ||
+  window.location.hostname.endsWith('.local')
 );
 
 // In dev: Vite proxy handles everything (same-origin, no CORS)
@@ -59,7 +62,7 @@ async function apiFetch(path, params = {}) {
 
     try {
       const controller = new AbortController();
-      const timeout = setTimeout(() => controller.abort(), 10000);
+      const timeout = setTimeout(() => controller.abort(), 60000);
 
       const res = await fetch(fullUrl, {
         signal: controller.signal,
@@ -378,7 +381,7 @@ export async function getYouTubeVideoUrl(songName, artistName) {
 
   try {
     const controller = new AbortController();
-    const timeout = setTimeout(() => controller.abort(), 6000);
+    const timeout = setTimeout(() => controller.abort(), 60000);
 
     const res = await fetch(searchUrl, { 
       signal: controller.signal,
@@ -451,7 +454,7 @@ export async function getYouTubeShortUrl(songName, artistName) {
 
   try {
     const controller = new AbortController();
-    const timeout = setTimeout(() => controller.abort(), 6000);
+    const timeout = setTimeout(() => controller.abort(), 60000);
     const res = await fetch(searchUrl, { signal: controller.signal, headers: { 'Accept': 'text/html,application/json' } });
     clearTimeout(timeout);
     if (!res.ok) return null;
