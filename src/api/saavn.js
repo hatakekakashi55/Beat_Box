@@ -488,3 +488,10 @@ export async function getYouTubeShortUrl(songName, artistName) {
   }
   return null;
 }
+
+export async function wakeUpBackend() {
+  try {
+    const url = isDev ? '/saavn-api' : WORKER_URL;
+    fetch(url).catch(() => {});
+  } catch (e) {}
+}

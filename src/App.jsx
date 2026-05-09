@@ -33,6 +33,7 @@ import SettingsModal from './components/SettingsModal/SettingsModal';
 
 import { usePlayer } from './context/PlayerContext';
 import { getHighQualityImage } from './utils/helpers';
+import { wakeUpBackend } from './api/saavn';
 import './App.css';
 
 function AppContent() {
@@ -44,6 +45,11 @@ function AppContent() {
   const ambientBg = currentSong
     ? `url(${getHighQualityImage(currentSong.image)})`
     : 'none';
+
+  // Wake up Render backend on initial load
+  useEffect(() => {
+    wakeUpBackend();
+  }, []);
 
   // 1. Wait for Firebase to check the user session
   if (authLoading) {

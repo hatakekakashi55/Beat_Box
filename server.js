@@ -6,7 +6,7 @@ import * as cheerio from 'cheerio';
 import { parse } from 'node-html-parser';
 import { FingerprintGenerator } from 'fingerprint-generator';
 import FormData from 'form-data';
-
+import ytProxy from './ytProxy.js';
 const app = express();
 app.use(cors({ origin: '*' }));
 app.use(express.json({ limit: '1mb' }));
@@ -360,6 +360,11 @@ app.use('/tmdb', async (req, res) => {
     res.status(502).json({ error: 'TMDB fetch failed' });
   }
 });
+
+// ═══════════════════════════════════════════════════════════════
+// YOUTUBE (PIPED API PROXY)
+// ═══════════════════════════════════════════════════════════════
+app.use('/api/yt', ytProxy);
 
 app.get('/', (req, res) => res.json({ status: 'Operational', service: 'BeatBox Proxy Engine', mode: 'Vercel-Ready' }));
 
