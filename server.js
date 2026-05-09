@@ -2,11 +2,11 @@ import express from 'express';
 import cors from 'cors';
 import { gotScraping } from 'got-scraping';
 import { ofetch } from 'ofetch';
+import crypto from 'crypto';
 import * as cheerio from 'cheerio';
 import { parse } from 'node-html-parser';
 import { FingerprintGenerator } from 'fingerprint-generator';
 import FormData from 'form-data';
-import ytProxy from './ytProxy.js';
 const app = express();
 app.use(cors({ origin: '*' }));
 app.use(express.json({ limit: '1mb' }));
@@ -55,15 +55,50 @@ function imgs(u) {
   ];
 }
 
-function dlUrls(preview) {
-  if (!preview) return [];
-  let base = preview.replace(/_p\.(mp4|m4a|mp3|aac)$/, '.$1');
-  base = base.replace('preview.saavncdn.com', 'aac.saavncdn.com');
+// ═══════════════════════════════════════════════════════════════
+// JIOSAAVN DES-ECB URL DECRYPTOR
+// media_preview_url is a Base64-encoded DES-ECB encrypted string.
+// Key: '38346591' — reverse-engineered from JioSaavn client code.
+// After decryption we get a real aac.saavncdn.com URL at _96 quality.
+// We then replace the quality suffix to get 320/160/96/48kbps variants.
+// ═══════════════════════════════════════════════════════════════
+function decryptSaavnUrl(encryptedBase64) {
+  try {
+    if (!encryptedBase64) return null;
+    const key = Buffer.from('38346591', 'utf8'); // 8-byte DES key
+    const encryptedBytes = Buffer.from(encryptedBase64, 'base64');
+    const decipher = crypto.createDecipheriv('des-ecb', key, null);
+    decipher.setAutoPadding(true);
+    const decrypted = Buffer.concat([decipher.update(encryptedBytes), decipher.final()]);
+    return decrypted.toString('utf8').trim();
+  } catch (e) {
+    log('Decrypt', `DES decrypt failed: ${e.message}`, 'error');
+    return null;
+  }
+}
+
+function dlUrls(encryptedPreviewUrl) {
+  if (!encryptedPreviewUrl) return [];
+  
+  // Decrypt the encrypted URL to get the real CDN link
+  const decrypted = decryptSaavnUrl(encryptedPreviewUrl);
+  if (!decrypted) return [];
+  
+  // The decrypted URL ends with a quality suffix like _96.mp4, _12.mp4, _160.mp4, etc.
+  // We normalise by replacing ANY _NNN. suffix with our desired quality variants.
+  // Regex matches e.g. _96., _12., _320., _48., _160.
+  const base = decrypted.replace(/_\d+\./, '_QUALITY.');
+  
+  // If the replace didn't fire (weird URL shape), return just the raw decrypted URL
+  if (!base.includes('_QUALITY.')) {
+    return [{ quality: '96kbps', link: decrypted }];
+  }
+
   return [
-    { quality: '320kbps', link: base.replace(/_\d+\./, '_320.') },
-    { quality: '160kbps', link: base.replace(/_\d+\./, '_160.') },
-    { quality: '96kbps', link: base.replace(/_\d+\./, '_96.') },
-    { quality: '48kbps', link: base.replace(/_\d+\./, '_48.') },
+    { quality: '320kbps', link: base.replace('_QUALITY.', '_320.') },
+    { quality: '160kbps', link: base.replace('_QUALITY.', '_160.') },
+    { quality: '96kbps',  link: base.replace('_QUALITY.', '_96.')  },
+    { quality: '48kbps',  link: base.replace('_QUALITY.', '_48.')  },
   ];
 }
 
@@ -360,11 +395,6 @@ app.use('/tmdb', async (req, res) => {
     res.status(502).json({ error: 'TMDB fetch failed' });
   }
 });
-
-// ═══════════════════════════════════════════════════════════════
-// YOUTUBE (PIPED API PROXY)
-// ═══════════════════════════════════════════════════════════════
-app.use('/api/yt', ytProxy);
 
 app.get('/', (req, res) => res.json({ status: 'Operational', service: 'BeatBox Proxy Engine', mode: 'Vercel-Ready' }));
 

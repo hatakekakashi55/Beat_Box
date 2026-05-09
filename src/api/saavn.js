@@ -317,32 +317,21 @@ export function getAllStreamVariants(downloadUrls) {
     return (ai === -1 ? 999 : ai) - (bi === -1 ? 999 : bi);
   });
 
-  // Phase 1: Direct CDN URLs (strip preview marker)
+  // Phase 1: Direct CDN URLs (already decrypted & correct from backend)
   for (const item of sorted) {
     const rawUrl = item.url || item.link;
     if (!rawUrl) continue;
-    const fullUrl = stripPreviewMarker(rawUrl);
-    add(fullUrl, item.quality, 'direct');
-    if (fullUrl !== rawUrl) add(rawUrl, item.quality, 'direct-raw');
+    add(rawUrl, item.quality, 'direct');
   }
 
-  // Phase 2: Quality-upgraded variants
-  const firstUrl = sorted[0]?.url || sorted[0]?.link;
-  if (firstUrl) {
-    const stripped = stripPreviewMarker(firstUrl);
-    for (const q of ['320', '160', '96']) {
-      add(upgradeQuality(stripped, q), `${q}kbps`, 'upgraded');
-    }
-  }
-
-  // Phase 3: Worker-proxied streams (fallback for blocked CDN)
-  if (!isDev) {
-    for (const item of sorted.slice(0, 2)) {
-      const rawUrl = item.url || item.link;
-      if (!rawUrl) continue;
-      const fullUrl = stripPreviewMarker(rawUrl);
-      add(`${WORKER_URL}/stream?url=${encodeURIComponent(fullUrl)}`, item.quality, 'worker-proxy');
-    }
+  // Phase 2: Worker/Local-proxied streams (fallback for CORS-blocked CDN)
+  for (const item of sorted.slice(0, 2)) {
+    const rawUrl = item.url || item.link;
+    if (!rawUrl) continue;
+    
+    // In Dev mode, use the local express server via Vite Proxy, in Prod use the Render URL
+    const proxyBase = isDev ? '/saavn-api' : WORKER_URL;
+    add(`${proxyBase}/stream?url=${encodeURIComponent(rawUrl)}`, item.quality, 'worker-proxy');
   }
 
   return variants;
@@ -487,6 +476,62 @@ export async function getYouTubeShortUrl(songName, artistName) {
     console.warn(`[YT Shorts] Search failed:`, err.message);
   }
   return null;
+}
+
+/**
+ * Get direct audio stream URL from Piped proxy for a given song
+ */
+export async function getYouTubeAudioStream(songName, artistName) {
+  if (!songName) return null;
+
+  const cleanName = songName
+    .replace(/\(From.*?\)/g, '')
+    .replace(/\(Tamil\)/g, '')
+    .replace(/\(Telugu\)/g, '')
+    .replace(/\(Hindi\)/g, '')
+    .replace(/\[.*?\]/g, '')
+    .trim();
+    
+  const firstArtist = (artistName || '').split(',')[0].trim();
+  const query = `${cleanName} ${firstArtist} official audio`.trim();
+  
+  const baseUrl = isDev ? '/saavn-api' : WORKER_URL;
+
+  try {
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 25000);
+
+    // 1. Search for video using our ytProxy backend
+    const searchRes = await fetch(`${baseUrl}/api/yt/search?q=${encodeURIComponent(query)}`, {
+      signal: controller.signal,
+      headers: { 'Accept': 'application/json' }
+    });
+    clearTimeout(timeout);
+
+    if (!searchRes.ok) throw new Error(`Search HTTP ${searchRes.status}`);
+    const searchData = await searchRes.json();
+    
+    const videoId = searchData?.results?.[0]?.id;
+    if (!videoId) return null;
+
+    // 2. Fetch stream from our ytProxy backend
+    const streamController = new AbortController();
+    const streamTimeout = setTimeout(() => streamController.abort(), 25000);
+    
+    const streamRes = await fetch(`${baseUrl}/api/yt/stream/${videoId}`, {
+      signal: streamController.signal,
+      headers: { 'Accept': 'application/json' }
+    });
+    clearTimeout(streamTimeout);
+
+    if (!streamRes.ok) throw new Error(`Stream HTTP ${streamRes.status}`);
+    const streamData = await streamRes.json();
+
+    return streamData.audioUrl || null;
+  } catch (err) {
+    console.warn(`[YT Stream] Fetch failed:`, err.message);
+    return null;
+  }
 }
 
 export async function wakeUpBackend() {
