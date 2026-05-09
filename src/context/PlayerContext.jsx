@@ -245,14 +245,6 @@ export function PlayerProvider({ children }) {
 
   // Firebase Auth Listener
   useEffect(() => {
-    // Ensure auth persists across reloads
-    setPersistence(auth, browserLocalPersistence).catch(console.error);
-
-    // Handle redirect result for browsers that don't support popups
-    getRedirectResult(auth).catch((error) => {
-      console.error('Error handling redirect result:', error);
-    });
-
     const authTimeout = setTimeout(() => {
       // Safety: If Firebase hangs for 5+ seconds, show login
       dispatch({ type: 'SET_AUTH', payload: { isAuthenticated: false, userProfile: null } });
@@ -313,13 +305,19 @@ export function PlayerProvider({ children }) {
    */
   const tryPlayWithFallbacks = useCallback(async (song, audioRef) => {
     const audio = audioRef.current;
-    if (!audio || !song?.downloadUrl) {
+    if (!audio || !song) {
       dispatch({ type: 'SET_LOADING', payload: false });
       return false;
     }
 
     isSwitchingRef.current = true;
-    const variants = getAllStreamVariants(song.downloadUrl);
+    const variants = [];
+    
+    // Try Saavn URLs
+    if (song.downloadUrl) {
+      variants.push(...getAllStreamVariants(song.downloadUrl));
+    }
+
     console.log(`[BeatBox] Trying ${variants.length} stream variants for: ${song.name}`);
 
     for (let i = 0; i < variants.length; i++) {
@@ -371,8 +369,45 @@ export function PlayerProvider({ children }) {
       }
     }
 
-    // All variants exhausted
-    console.error('[BeatBox] ❌ All stream variants failed for:', song.name);
+    // All Saavn variants exhausted — try YouTube audio as last resort
+    console.warn('[BeatBox] ⚡ All Saavn streams failed, trying YouTube audio fallback...');
+    try {
+      const { getYouTubeAudioStream } = await import('../api/saavn');
+      const artistName = song.primaryArtists || song.artists?.primary?.map(a => a.name).join(', ') || '';
+      const ytUrl = await getYouTubeAudioStream(song.name || song.title, artistName);
+      
+      if (ytUrl) {
+        console.log('[BeatBox] 🎵 Got YouTube audio URL, attempting playback...');
+        audio.pause();
+        audio.src = ytUrl;
+        audio.load();
+
+        await new Promise((resolve, reject) => {
+          const onCanPlay = () => { cleanup(); resolve(); };
+          const onError = () => { cleanup(); reject(new Error('YouTube audio load error')); };
+          const timeout = setTimeout(() => { cleanup(); reject(new Error('YouTube audio timed out')); }, 10000);
+          function cleanup() {
+            audio.removeEventListener('canplay', onCanPlay);
+            audio.removeEventListener('error', onError);
+            clearTimeout(timeout);
+          }
+          audio.addEventListener('canplay', onCanPlay, { once: true });
+          audio.addEventListener('error', onError, { once: true });
+        });
+
+        if (isPlayingRef.current) {
+          await audio.play();
+        }
+        console.log('[BeatBox] ✅ Playing via YouTube audio fallback');
+        isSwitchingRef.current = false;
+        return true;
+      }
+    } catch (ytErr) {
+      console.warn('[BeatBox] YouTube fallback also failed:', ytErr.message);
+    }
+
+    // Everything exhausted
+    console.error('[BeatBox] ❌ All stream sources failed for:', song.name);
     isSwitchingRef.current = false;
     dispatch({ type: 'SET_LOADING', payload: false });
     return false;

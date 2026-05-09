@@ -27,3 +27,5 @@ dist-ssr
 scratch/
 scratch_api_test.js
 
+
+.vercel

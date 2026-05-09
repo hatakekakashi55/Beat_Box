@@ -7,6 +7,7 @@ import * as cheerio from 'cheerio';
 import { parse } from 'node-html-parser';
 import { FingerprintGenerator } from 'fingerprint-generator';
 import FormData from 'form-data';
+import ytProxy from './ytProxy.js';
 const app = express();
 app.use(cors({ origin: '*' }));
 app.use(express.json({ limit: '1mb' }));
@@ -83,12 +84,16 @@ function dlUrls(encryptedPreviewUrl) {
   if (!encryptedPreviewUrl) return [];
   
   // Decrypt the encrypted URL to get the real CDN link
-  const decrypted = decryptSaavnUrl(encryptedPreviewUrl);
+  let decrypted = decryptSaavnUrl(encryptedPreviewUrl);
   if (!decrypted) return [];
+  
+  // Remove the preview marker '_p' so we can access the full song
+  decrypted = decrypted.replace(/_p\.mp4/g, '.mp4')
+                       .replace(/_p\.m4a/g, '.m4a')
+                       .replace(/_p\.aac/g, '.aac');
   
   // The decrypted URL ends with a quality suffix like _96.mp4, _12.mp4, _160.mp4, etc.
   // We normalise by replacing ANY _NNN. suffix with our desired quality variants.
-  // Regex matches e.g. _96., _12., _320., _48., _160.
   const base = decrypted.replace(/_\d+\./, '_QUALITY.');
   
   // If the replace didn't fire (weird URL shape), return just the raw decrypted URL
@@ -397,6 +402,8 @@ app.use('/tmdb', async (req, res) => {
     res.status(502).json({ error: 'TMDB fetch failed' });
   }
 });
+
+app.use('/api/yt', ytProxy);
 
 app.get('/', (req, res) => res.json({ status: 'Operational', service: 'BeatBox Proxy Engine', mode: 'Vercel-Ready' }));
 

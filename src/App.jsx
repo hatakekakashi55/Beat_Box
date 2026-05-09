@@ -30,6 +30,8 @@ import TVShows from './pages/TVShows/TVShows';
 import TrendingMovies from './pages/TrendingMovies/TrendingMovies';
 import Login from './pages/Login/Login';
 import SettingsModal from './components/SettingsModal/SettingsModal';
+import { onAuthStateChanged } from 'firebase/auth';
+import { auth } from './firebase';
 
 import { usePlayer } from './context/PlayerContext';
 import { getHighQualityImage } from './utils/helpers';
@@ -38,9 +40,19 @@ import './App.css';
 
 function AppContent() {
   const location = useLocation();
-  const { currentSong, isAuthenticated, authLoading, showQueue, showSettings, toggleSettings, toggleQueue } = usePlayer();
+  const { currentSong, showQueue, showSettings, toggleSettings, toggleQueue } = usePlayer();
   const [mode, setMode] = useState('music'); // 'music' | 'movies'
   const [showSplash, setShowSplash] = useState(true);
+
+  // ✅ Direct Firebase auth check — PlayerContext-ஐ நம்பாம
+  const [firebaseUser, setFirebaseUser] = useState(undefined); // undefined = loading
+
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, (user) => {
+      setFirebaseUser(user ?? null); // null = not logged in
+    });
+    return unsubscribe;
+  }, []);
 
   const ambientBg = currentSong
     ? `url(${getHighQualityImage(currentSong.image)})`
@@ -52,12 +64,14 @@ function AppContent() {
   }, []);
 
   // 1. Wait for Firebase to check the user session
-  if (authLoading) {
+  if (firebaseUser === undefined) {
     return <SplashScreen onComplete={() => {}} />;
   }
 
-  // 2. If session check is done and no user, show Login
-  if (!isAuthenticated) {
+  const hasOnboarded = !!localStorage.getItem('uxbeat_languages');
+
+  // 2. If session check is done and no user (or user hasn't finished onboarding), show Login
+  if (!firebaseUser || !hasOnboarded) {
     return <Login />;
   }
 

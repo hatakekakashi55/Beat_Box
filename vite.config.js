@@ -4,13 +4,16 @@ import react from '@vitejs/plugin-react'
 export default defineConfig({
   plugins: [react()],
   server: {
+    headers: {
+      'Cross-Origin-Opener-Policy': 'unsafe-none',
+    },
     proxy: {
-      // Proxy JioSaavn API via Cloudflare Worker to avoid TLS drops
+      // Proxy JioSaavn API via Cloudflare Worker (saavn.dev is DNS-blocked by some ISPs)
       '/saavn-api': {
-        target: 'http://localhost:3001',
+        target: 'https://saavn-proxy-vercel.vercel.app',
         changeOrigin: true,
         rewrite: (path) => path.replace(/^\/saavn-api/, ''),
-        secure: false,
+        secure: true,
       },
       // Proxy YouTube directly (since Piped instances are down globally)
       '/youtube-api': {
@@ -22,6 +25,12 @@ export default defineConfig({
           'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
           'Accept-Language': 'en-US,en;q=0.9'
         }
+      },
+      // Proxy YouTube Proxy Router
+      '/api/yt': {
+        target: 'http://localhost:3001',
+        changeOrigin: true,
+        secure: false,
       },
       // Proxy TMDB API
       '/tmdb-api': {

@@ -1,3 +1,7 @@
+export const config = {
+  runtime: 'edge',
+};
+
 // ── Pure JS DES (ECB mode) ────────────────────────────────────
 // JioSaavn uses DES-ECB with key '38346591'
 const PC1 = [57,49,41,33,25,17,9,1,58,50,42,34,26,18,10,2,59,51,43,35,27,19,11,3,60,52,44,36,63,55,47,39,31,23,15,7,62,54,46,38,30,22,14,6,61,53,45,37,29,21,13,5,28,20,12,4];
@@ -154,7 +158,6 @@ function normalizeSong(r) {
 
   return {
     id: r.id || r.songid,
-    // ✅ Use 'name' not 'song/title' — saavn.js expects raw.name
     name: r.song || r.title || r.name || 'Unknown',
     title: r.song || r.title || r.name || 'Unknown',
     type: 'song',
@@ -163,11 +166,9 @@ function normalizeSong(r) {
     language: r.language || mi.language || '',
     label: r.label || mi.label || '',
     hasLyrics: r.has_lyrics === 'true' || r.has_lyrics === true,
-    // ✅ image as array of {quality, link} objects
     image: imageArr,
     primaryArtists: r.primary_artists || mi.primary_artists || r.subtitle || '',
     album: r.album || mi.album || '',
-    // ✅ downloadUrl as array of {quality, url} objects
     downloadUrl: getDownloadUrls(encUrl, previewUrl),
     url: r.perma_url || r.url || '',
   };
@@ -197,7 +198,6 @@ async function saavnFetch(url) {
       'Referer': 'https://www.jiosaavn.com/',
       'Origin': 'https://www.jiosaavn.com',
     },
-    cf: { cacheTtl: 300, cacheEverything: true },
   });
   if (!res.ok) {
     const text = await res.text();
@@ -212,159 +212,154 @@ async function saavnFetch(url) {
 }
 
 // ── Router ────────────────────────────────────────────────────
-export default {
-  async fetch(request) {
-    const url = new URL(request.url);
-    const path = url.pathname;
-    const q = url.searchParams;
+export default async function (request) {
+  const url = new URL(request.url);
+  const path = url.pathname;
+  const q = url.searchParams;
 
-    if (request.method === 'OPTIONS') {
-      return new Response(null, { status: 204, headers: CORS });
-    }
-
-    try {
-      if (path === '/api/search') {
-        const raw = await saavnFetch(`${JIOSAAVN}?__call=autocomplete.get&_format=json&_marker=0&cc=in&query=${e(q.get('query')||'')}`);
-        const fmt = arr => (arr?.data||[]).map(i=>({
-          id: i.id||i.albumid||i.listid||'',
-          name: i.title||i.name||i.song||'',
-          title: i.title||i.name||i.song||'',
-          image: imgs(i.image),
-          primaryArtists: i.primary_artists||i.subtitle||'',
-          url: i.perma_url||'',
-        }));
-        return jsonRes({ data: {
-          topQuery:  { results: [] },
-          songs:     { results: fmt(raw.songs)     },
-          albums:    { results: fmt(raw.albums)    },
-          artists:   { results: fmt(raw.artists)   },
-          playlists: { results: fmt(raw.playlists) },
-        }});
-      }
-
-      if (path === '/api/search/songs') {
-        const raw = await saavnFetch(`${JIOSAAVN}?__call=search.getResults&_format=json&_marker=0&cc=in&p=1&q=${e(q.get('query')||'')}&n=${q.get('limit')||20}`);
-        // JioSaavn returns { results: [...], total: "50" }
-        const results = raw?.results || raw?.data || [];
-        return jsonRes({ 
-          data: { 
-            results: results.map(normalizeSong).filter(Boolean), 
-            total: parseInt(raw?.total || 0) 
-          }
-        });
-      }
-
-      if (path === '/api/search/albums') {
-        const raw = await saavnFetch(`${JIOSAAVN}?__call=search.getAlbumResults&_format=json&_marker=0&cc=in&p=1&q=${e(q.get('query')||'')}&n=${q.get('limit')||20}`);
-        const results = raw?.results || raw?.data || (Array.isArray(raw) ? raw : []);
-        return jsonRes({ 
-          data: { 
-            results: results.map(r => ({
-              id: r.albumid || r.id || '',
-              name: r.title || r.name || '',
-              title: r.title || r.name || '',
-              image: imgs(r.image),
-              primaryArtists: r.music || r.primary_artists || r.subtitle || '',
-              year: r.year || '',
-              url: r.perma_url || '',
-            })),
-            total: parseInt(raw?.total || results.length || 0)
-          }
-        });
-      }
-
-      if (path === '/api/search/artists') {
-        const raw = await saavnFetch(`${JIOSAAVN}?__call=search.getArtistResults&_format=json&_marker=0&cc=in&p=1&q=${e(q.get('query')||'')}&n=${q.get('limit')||20}`);
-        return jsonRes({ data: { results: raw.results||[], total: parseInt(raw.total||0) }});
-      }
-
-      if (path === '/api/search/playlists') {
-        const raw = await saavnFetch(`${JIOSAAVN}?__call=search.getPlaylistResults&_format=json&_marker=0&cc=in&p=1&q=${e(q.get('query')||'')}&n=${q.get('limit')||20}`);
-        return jsonRes({ data: { results: raw.results||[], total: parseInt(raw.total||0) }});
-      }
-
-      if (path.match(/^\/api\/songs\/[^/]+$/) && !path.includes('suggestions')) {
-        const id = path.split('/')[3];
-        const raw = await saavnFetch(`${JIOSAAVN}?__call=song.getDetails&_format=json&_marker=0&cc=in&pids=${e(id)}`);
-        const songs = Object.values(raw).filter(s=>s?.id).map(normalizeSong).filter(Boolean);
-        return jsonRes({ data: songs });
-      }
-
-      if (path.match(/^\/api\/songs\/[^/]+\/suggestions$/)) {
-        const id = path.split('/')[3];
-        const raw = await saavnFetch(`${JIOSAAVN}?__call=reco.getreco&_format=json&_marker=0&cc=in&pid=${e(id)}&n=${q.get('limit')||20}`);
-        const arr = Array.isArray(raw) ? raw : Object.values(raw).filter(s=>s?.id);
-        return jsonRes({ data: arr.map(normalizeSong).filter(Boolean) });
-      }
-
-      if (path === '/api/albums') {
-        // Try content.getAlbumDetails first, fallback to search
-        let raw;
-        try {
-          raw = await saavnFetch(`${JIOSAAVN}?__call=content.getAlbumDetails&_format=json&_marker=0&cc=in&albumid=${e(q.get('id')||'')}`);
-        } catch {
-          return jsonRes({ error: 'Album not found' }, 404);
-        }
-
-        const songs = (raw.songs || raw.list || []).map(normalizeSong).filter(Boolean);
-        
-        // Normalize album image same way
-        const rawImg = raw.image || '';
-        const imgBase = rawImg.replace(/-\d+x\d+\./, '-{R}.');
-        const imageArr = [
-          { quality: '50x50',   link: imgBase.replace('{R}', '50x50')   },
-          { quality: '150x150', link: imgBase.replace('{R}', '150x150') },
-          { quality: '500x500', link: imgBase.replace('{R}', '500x500') },
-        ];
-
-        return jsonRes({ data: {
-          id: raw.albumid || raw.id,
-          name: raw.title || raw.name,
-          title: raw.title || raw.name,
-          year: raw.year,
-          language: raw.language,
-          image: imageArr,
-          primaryArtists: raw.primary_artists || raw.music || '',
-          songs,
-        }});
-      }
-
-      if (path === '/api/playlists') {
-        const raw = await saavnFetch(`${JIOSAAVN}?__call=playlist.getDetails&_format=json&_marker=0&cc=in&listid=${e(q.get('id')||'')}`);
-        return jsonRes({ data: { ...raw, songs: (raw.songs||[]).map(normalizeSong).filter(Boolean) }});
-      }
-
-      if (path === '/stream') {
-        const streamUrl = q.get('url');
-        if (!streamUrl) return jsonRes({ error: 'Missing url' }, 400);
-        const streamRes = await fetch(streamUrl, {
-          headers: {
-            'User-Agent': 'Mozilla/5.0 Chrome/120.0.0.0',
-            'Referer': 'https://www.jiosaavn.com/',
-            ...(request.headers.get('range') ? { Range: request.headers.get('range') } : {}),
-          },
-        });
-        const headers = new Headers(streamRes.headers);
-        headers.set('Access-Control-Allow-Origin', '*');
-        return new Response(streamRes.body, { status: streamRes.status, headers });
-      }
-
-      if (path === '/youtube/search') {
-        const ytRes = await fetch(
-          `https://www.youtube.com/results?search_query=${e(q.get('q')||'')}`,
-          { headers: { 'User-Agent': 'Mozilla/5.0 Chrome/120.0.0.0' } }
-        );
-        const html = await ytRes.text();
-        const match = html.match(/"videoId":"([a-zA-Z0-9_-]{11})"/);
-        if (match) return jsonRes({ items: [{ url: `/watch?v=${match[1]}`, thumbnail: `https://i.ytimg.com/vi/${match[1]}/hqdefault.jpg` }] });
-        return jsonRes({ items: [] });
-      }
-
-      if (path === '/') return jsonRes({ status: 'OK', service: 'BeatBox Worker ✅' });
-      return jsonRes({ error: 'Not found' }, 404);
-
-    } catch (err) {
-      return jsonRes({ error: err.message }, 502);
-    }
+  if (request.method === 'OPTIONS') {
+    return new Response(null, { status: 204, headers: CORS });
   }
-};
+
+  try {
+    if (path === '/api/search') {
+      const raw = await saavnFetch(`${JIOSAAVN}?__call=autocomplete.get&_format=json&_marker=0&cc=in&query=${e(q.get('query')||'')}`);
+      const fmt = arr => (arr?.data||[]).map(i=>({
+        id: i.id||i.albumid||i.listid||'',
+        name: i.title||i.name||i.song||'',
+        title: i.title||i.name||i.song||'',
+        image: imgs(i.image),
+        primaryArtists: i.primary_artists||i.subtitle||'',
+        url: i.perma_url||'',
+      }));
+      return jsonRes({ data: {
+        topQuery:  { results: [] },
+        songs:     { results: fmt(raw.songs)     },
+        albums:    { results: fmt(raw.albums)    },
+        artists:   { results: fmt(raw.artists)   },
+        playlists: { results: fmt(raw.playlists) },
+      }});
+    }
+
+    if (path === '/api/search/songs') {
+      const raw = await saavnFetch(`${JIOSAAVN}?__call=search.getResults&_format=json&_marker=0&cc=in&p=1&q=${e(q.get('query')||'')}&n=${q.get('limit')||20}`);
+      const results = raw?.results || raw?.data || [];
+      return jsonRes({ 
+        data: { 
+          results: results.map(normalizeSong).filter(Boolean), 
+          total: parseInt(raw?.total || 0) 
+        }
+      });
+    }
+
+    if (path === '/api/search/albums') {
+      const raw = await saavnFetch(`${JIOSAAVN}?__call=search.getAlbumResults&_format=json&_marker=0&cc=in&p=1&q=${e(q.get('query')||'')}&n=${q.get('limit')||20}`);
+      const results = raw?.results || raw?.data || (Array.isArray(raw) ? raw : []);
+      return jsonRes({ 
+        data: { 
+          results: results.map(r => ({
+            id: r.albumid || r.id || '',
+            name: r.title || r.name || '',
+            title: r.title || r.name || '',
+            image: imgs(r.image),
+            primaryArtists: r.music || r.primary_artists || r.subtitle || '',
+            year: r.year || '',
+            url: r.perma_url || '',
+          })),
+          total: parseInt(raw?.total || results.length || 0)
+        }
+      });
+    }
+
+    if (path === '/api/search/artists') {
+      const raw = await saavnFetch(`${JIOSAAVN}?__call=search.getArtistResults&_format=json&_marker=0&cc=in&p=1&q=${e(q.get('query')||'')}&n=${q.get('limit')||20}`);
+      return jsonRes({ data: { results: raw.results||[], total: parseInt(raw.total||0) }});
+    }
+
+    if (path === '/api/search/playlists') {
+      const raw = await saavnFetch(`${JIOSAAVN}?__call=search.getPlaylistResults&_format=json&_marker=0&cc=in&p=1&q=${e(q.get('query')||'')}&n=${q.get('limit')||20}`);
+      return jsonRes({ data: { results: raw.results||[], total: parseInt(raw.total||0) }});
+    }
+
+    if (path.match(/^\/api\/songs\/[^/]+$/) && !path.includes('suggestions')) {
+      const id = path.split('/')[3];
+      const raw = await saavnFetch(`${JIOSAAVN}?__call=song.getDetails&_format=json&_marker=0&cc=in&pids=${e(id)}`);
+      const songs = Object.values(raw).filter(s=>s?.id).map(normalizeSong).filter(Boolean);
+      return jsonRes({ data: songs });
+    }
+
+    if (path.match(/^\/api\/songs\/[^/]+\/suggestions$/)) {
+      const id = path.split('/')[3];
+      const raw = await saavnFetch(`${JIOSAAVN}?__call=reco.getreco&_format=json&_marker=0&cc=in&pid=${e(id)}&n=${q.get('limit')||20}`);
+      const arr = Array.isArray(raw) ? raw : Object.values(raw).filter(s=>s?.id);
+      return jsonRes({ data: arr.map(normalizeSong).filter(Boolean) });
+    }
+
+    if (path === '/api/albums') {
+      let raw;
+      try {
+        raw = await saavnFetch(`${JIOSAAVN}?__call=content.getAlbumDetails&_format=json&_marker=0&cc=in&albumid=${e(q.get('id')||'')}`);
+      } catch {
+        return jsonRes({ error: 'Album not found' }, 404);
+      }
+
+      const songs = (raw.songs || raw.list || []).map(normalizeSong).filter(Boolean);
+      
+      const rawImg = raw.image || '';
+      const imgBase = rawImg.replace(/-\d+x\d+\./, '-{R}.');
+      const imageArr = [
+        { quality: '50x50',   link: imgBase.replace('{R}', '50x50')   },
+        { quality: '150x150', link: imgBase.replace('{R}', '150x150') },
+        { quality: '500x500', link: imgBase.replace('{R}', '500x500') },
+      ];
+
+      return jsonRes({ data: {
+        id: raw.albumid || raw.id,
+        name: raw.title || raw.name,
+        title: raw.title || raw.name,
+        year: raw.year,
+        language: raw.language,
+        image: imageArr,
+        primaryArtists: raw.primary_artists || raw.music || '',
+        songs,
+      }});
+    }
+
+    if (path === '/api/playlists') {
+      const raw = await saavnFetch(`${JIOSAAVN}?__call=playlist.getDetails&_format=json&_marker=0&cc=in&listid=${e(q.get('id')||'')}`);
+      return jsonRes({ data: { ...raw, songs: (raw.songs||[]).map(normalizeSong).filter(Boolean) }});
+    }
+
+    if (path === '/stream') {
+      const streamUrl = q.get('url');
+      if (!streamUrl) return jsonRes({ error: 'Missing url' }, 400);
+      const streamRes = await fetch(streamUrl, {
+        headers: {
+          'User-Agent': 'Mozilla/5.0 Chrome/120.0.0.0',
+          'Referer': 'https://www.jiosaavn.com/',
+          ...(request.headers.get('range') ? { Range: request.headers.get('range') } : {}),
+        },
+      });
+      const headers = new Headers(streamRes.headers);
+      headers.set('Access-Control-Allow-Origin', '*');
+      return new Response(streamRes.body, { status: streamRes.status, headers });
+    }
+
+    if (path === '/youtube/search') {
+      const ytRes = await fetch(
+        `https://www.youtube.com/results?search_query=${e(q.get('q')||'')}`,
+        { headers: { 'User-Agent': 'Mozilla/5.0 Chrome/120.0.0.0' } }
+      );
+      const html = await ytRes.text();
+      const match = html.match(/"videoId":"([a-zA-Z0-9_-]{11})"/);
+      if (match) return jsonRes({ items: [{ url: `/watch?v=${match[1]}`, thumbnail: `https://i.ytimg.com/vi/${match[1]}/hqdefault.jpg` }] });
+      return jsonRes({ items: [] });
+    }
+
+    if (path === '/') return jsonRes({ status: 'OK', service: 'BeatBox Vercel Proxy ✅' });
+    return jsonRes({ error: 'Not found' }, 404);
+
+  } catch (err) {
+    return jsonRes({ error: err.message }, 502);
+  }
+}

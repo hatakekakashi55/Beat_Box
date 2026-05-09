@@ -9,13 +9,14 @@
  *
  * 🔧 Preview Fix: Strips `_p` marker from CDN URLs for full songs.
  */
+import CryptoJS from 'crypto-js';
 
 // ══════════════════════════════════════════════════════════════
 //  CONFIGURATION
 // ══════════════════════════════════════════════════════════════
 
-// Your Render backend URL (server.js hosted on Render)
-const WORKER_URL = 'https://beat-box-h85k.onrender.com';
+// Your deployed Cloudflare Worker URL (Replace with your actual workers.dev URL after deploying)
+const WORKER_URL = 'https://saavn-proxy-vercel.vercel.app';
 const API_VERSION = '2.1.2'; // Force rebuild hash
 
 // Detect if we're in dev mode (Vite dev server with proxy)
@@ -27,18 +28,24 @@ const isDev = typeof window !== 'undefined' && (
   window.location.hostname.endsWith('.local')
 );
 
-// In dev: Vite proxy handles everything (same-origin, no CORS)
-// In prod: Use worker or direct API
-// In production: ONLY use Worker (direct API calls get CORS blocked by browser!)
-// In dev: Vite proxy handles CORS for us
-const API_INSTANCES = isDev
-  ? ['/saavn-api']       // Vite dev proxy → Worker
-  : [WORKER_URL];        // Cloudflare Worker ONLY (adds CORS headers)
+// Fallback public instances of sumitkolhe/jiosaavn-api 
+// (In case primary goes down or hits limits)
+const PUBLIC_FALLBACKS = [
+  WORKER_URL,
+  'https://jiosaavn-api-privatecvc2.vercel.app',
+  'https://saavn.me'
+];
 
-// YouTube search endpoint
+// Dev: Browser -> /saavn-api -> Vite Proxy -> Cloudflare Worker
+// Prod: Browser -> Worker directly (saavn.dev is DNS-blocked by ISPs)
+const API_INSTANCES = isDev 
+  ? ['/saavn-api'] 
+  : [WORKER_URL, 'https://jiosaavn-api-privatecvc2.vercel.app'];
+
+// YouTube search endpoint (Piped API proxy or direct via worker)
 const YOUTUBE_API = isDev
-  ? '/youtube-api'                           // Vite dev proxy → www.youtube.com
-  : `${WORKER_URL}/youtube`;                 // Worker proxy in prod
+  ? '/youtube-api'                           
+  : `${WORKER_URL}/youtube`;
 
 let currentInstanceIndex = 0;
 
@@ -93,8 +100,48 @@ async function apiFetch(path, params = {}) {
 //  NORMALIZE
 // ══════════════════════════════════════════════════════════════
 
+function generateDownloadLinks(encryptedMediaUrl) {
+  if (!encryptedMediaUrl) return [];
+  try {
+    const key = CryptoJS.enc.Utf8.parse('38346591');
+    const decrypted = CryptoJS.DES.decrypt(
+      { ciphertext: CryptoJS.enc.Base64.parse(encryptedMediaUrl) },
+      key,
+      {
+        mode: CryptoJS.mode.ECB,
+        padding: CryptoJS.pad.Pkcs7,
+      }
+    );
+    const decUrl = decrypted.toString(CryptoJS.enc.Utf8);
+    if (!decUrl) return [];
+    
+    // Convert to mp4 extension for higher qualities
+    const cleanUrl = decUrl.replace(/_96\.mp4|_320\.mp4|_160\.mp4/g, '');
+    
+    return [
+      { quality: '12kbps', url: decUrl.replace(/_96\.mp4|_320\.mp4|_160\.mp4/g, '_12.mp4') },
+      { quality: '48kbps', url: decUrl.replace(/_96\.mp4|_320\.mp4|_160\.mp4/g, '_48.mp4') },
+      { quality: '96kbps', url: decUrl.replace(/_96\.mp4|_320\.mp4|_160\.mp4/g, '_96.mp4') },
+      { quality: '160kbps', url: decUrl.replace(/_96\.mp4|_320\.mp4|_160\.mp4/g, '_160.mp4') },
+      { quality: '320kbps', url: decUrl.replace(/_96\.mp4|_320\.mp4|_160\.mp4/g, '_320.mp4') },
+    ];
+  } catch (err) {
+    console.error('[Saavn] Decryption failed:', err);
+    return [];
+  }
+}
+
 function normalizeSong(raw) {
   if (!raw) return null;
+
+  let dLinks = raw.downloadUrl || raw.download_url;
+  if ((!dLinks || dLinks.length === 0) && raw.encrypted_media_url) {
+    dLinks = generateDownloadLinks(raw.encrypted_media_url);
+  } else if (!Array.isArray(dLinks) && typeof dLinks === 'string') {
+    dLinks = [{ quality: '320kbps', url: dLinks }];
+  } else if (!dLinks) {
+    dLinks = [];
+  }
   return {
     id: raw.id,
     name: raw.name || raw.title || 'Unknown',
@@ -114,7 +161,7 @@ function normalizeSong(raw) {
           raw.primaryArtists || raw.subtitle || 'Unknown Artist',
     artists: raw.artists || null,
     album: raw.album?.name || raw.album || '',
-    downloadUrl: raw.downloadUrl || raw.download_url || [],
+    downloadUrl: dLinks,
     url: raw.url || '',
     copyright: raw.copyright || '',
     explicitContent: raw.explicitContent || false,
@@ -299,39 +346,22 @@ function upgradeQuality(url, targetKbps) {
 }
 
 export function getAllStreamVariants(downloadUrls) {
-  if (!downloadUrls || !Array.isArray(downloadUrls) || downloadUrls.length === 0) return [];
+  if (!downloadUrls?.length) return [];
 
   const variants = [];
   const seen = new Set();
-
-  function add(url, quality, proxy) {
-    if (!url || seen.has(url)) return;
-    seen.add(url);
-    variants.push({ url, quality, proxy });
-  }
-
   const qualityOrder = ['320kbps', '160kbps', '96kbps', '48kbps', '12kbps'];
-  const sorted = [...downloadUrls].sort((a, b) => {
-    const ai = qualityOrder.indexOf(a.quality);
-    const bi = qualityOrder.indexOf(b.quality);
-    return (ai === -1 ? 999 : ai) - (bi === -1 ? 999 : bi);
-  });
 
-  // Phase 1: Direct CDN URLs (already decrypted & correct from backend)
+  const sorted = [...downloadUrls].sort((a, b) =>
+    qualityOrder.indexOf(a.quality) - qualityOrder.indexOf(b.quality)
+  );
+
   for (const item of sorted) {
     const rawUrl = item.url || item.link;
-    if (!rawUrl) continue;
-    add(rawUrl, item.quality, 'direct');
-  }
-
-  // Phase 2: Worker/Local-proxied streams (fallback for CORS-blocked CDN)
-  for (const item of sorted.slice(0, 2)) {
-    const rawUrl = item.url || item.link;
-    if (!rawUrl) continue;
-    
-    // In Dev mode, use the local express server via Vite Proxy, in Prod use the Render URL
-    const proxyBase = isDev ? '/saavn-api' : WORKER_URL;
-    add(`${proxyBase}/stream?url=${encodeURIComponent(rawUrl)}`, item.quality, 'worker-proxy');
+    if (!rawUrl || seen.has(rawUrl)) continue;
+    seen.add(rawUrl);
+    // ✅ Direct CDN URL — no proxy needed!
+    variants.push({ url: rawUrl, quality: item.quality, proxy: 'direct' });
   }
 
   return variants;
@@ -495,7 +525,7 @@ export async function getYouTubeAudioStream(songName, artistName) {
   const firstArtist = (artistName || '').split(',')[0].trim();
   const query = `${cleanName} ${firstArtist} official audio`.trim();
   
-  const baseUrl = isDev ? '/saavn-api' : WORKER_URL;
+  const baseUrl = isDev ? '' : WORKER_URL;
 
   try {
     const controller = new AbortController();
@@ -536,7 +566,7 @@ export async function getYouTubeAudioStream(songName, artistName) {
 
 export async function wakeUpBackend() {
   try {
-    const url = isDev ? '/saavn-api' : WORKER_URL;
+    const url = WORKER_URL;
     fetch(url).catch(() => {});
   } catch (e) {}
 }

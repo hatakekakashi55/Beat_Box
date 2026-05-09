@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { usePlayer } from '../../context/PlayerContext';
 import { auth, googleProvider } from '../../firebase';
-import { signInWithRedirect, signInWithPopup, createUserWithEmailAndPassword, signInWithEmailAndPassword, updateProfile } from 'firebase/auth';
+import { signInWithRedirect, getRedirectResult, signInWithPopup, createUserWithEmailAndPassword, signInWithEmailAndPassword, updateProfile } from 'firebase/auth';
 import { LANGUAGES } from '../../data/languageData';
 import {
   IoMusicalNotes,
@@ -22,7 +22,7 @@ import './Login.css';
 
 export default function Login() {
   const { login, isAuthenticated } = usePlayer();
-  const [step, setStep] = useState(0);
+  const [step, setStep] = useState(auth.currentUser ? 1 : 0);
   const [loading, setLoading] = useState(false);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -32,12 +32,23 @@ export default function Login() {
   const [selectedArtists, setSelectedArtists] = useState([]);
   const [selectedMoods, setSelectedMoods] = useState([]);
 
-  // If already authenticated (e.g. from redirect), skip login step
+  // Check auth state directly to ensure we skip Step 0 if they're already logged in (e.g. after redirect)
   React.useEffect(() => {
-    if (isAuthenticated && step === 0) {
-      setStep(1);
-    }
-  }, [isAuthenticated, step]);
+    const unsubscribe = auth.onAuthStateChanged((user) => {
+      if (user && step === 0) {
+        setStep(1);
+      }
+    });
+
+    // Also catch any redirect result just in case
+    getRedirectResult(auth).then((result) => {
+      if (result?.user && step === 0) {
+        setStep(1);
+      }
+    }).catch(console.error);
+
+    return () => unsubscribe();
+  }, [step]);
 
   /* ── Auth Submit ── */
   const handleSubmit = async (e) => {
@@ -61,14 +72,14 @@ export default function Login() {
   const handleSocialLogin = async () => {
     setLoading(true);
     try {
-      await signInWithPopup(auth, googleProvider);
-      // setStep(1) will be triggered by useEffect
+      const result = await signInWithPopup(auth, googleProvider);
+      if (result.user) {
+        setStep(1);
+      }
     } catch (error) {
-      console.error(error);
-      if (error.code === 'auth/popup-blocked') {
-        await signInWithRedirect(auth, googleProvider);
-      } else {
-        alert("Login failed: " + error.message);
+      console.error('Login error:', error.code, error.message);
+      if (error.code !== 'auth/popup-closed-by-user') {
+        alert(error.message);
       }
     } finally {
       setLoading(false);
