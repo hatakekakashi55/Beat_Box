@@ -2,7 +2,7 @@ import express from 'express';
 import cors from 'cors';
 import { gotScraping } from 'got-scraping';
 import { ofetch } from 'ofetch';
-import crypto from 'crypto';
+import CryptoJS from 'crypto-js';
 import * as cheerio from 'cheerio';
 import { parse } from 'node-html-parser';
 import { FingerprintGenerator } from 'fingerprint-generator';
@@ -65,12 +65,14 @@ function imgs(u) {
 function decryptSaavnUrl(encryptedBase64) {
   try {
     if (!encryptedBase64) return null;
-    const key = Buffer.from('38346591', 'utf8'); // 8-byte DES key
-    const encryptedBytes = Buffer.from(encryptedBase64, 'base64');
-    const decipher = crypto.createDecipheriv('des-ecb', key, null);
-    decipher.setAutoPadding(true);
-    const decrypted = Buffer.concat([decipher.update(encryptedBytes), decipher.final()]);
-    return decrypted.toString('utf8').trim();
+    const key = CryptoJS.enc.Utf8.parse('38346591');
+    const decrypted = CryptoJS.DES.decrypt({
+        ciphertext: CryptoJS.enc.Base64.parse(encryptedBase64)
+    }, key, {
+        mode: CryptoJS.mode.ECB,
+        padding: CryptoJS.pad.Pkcs7
+    });
+    return decrypted.toString(CryptoJS.enc.Utf8).trim();
   } catch (e) {
     log('Decrypt', `DES decrypt failed: ${e.message}`, 'error');
     return null;
